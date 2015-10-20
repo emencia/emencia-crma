@@ -1,0 +1,4 @@
+django
+django-modeltranslation
+djangocms-text-ckeditor==2.4.3
+bleach

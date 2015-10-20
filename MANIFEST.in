@@ -1,0 +1,6 @@
+include LICENSE
+include README.md
+include requirements.txt
+recursive-include crma/static *
+recursive-include crma/templates *
+global-exclude *.orig *.pyc *.log *.swp local_settings.py
