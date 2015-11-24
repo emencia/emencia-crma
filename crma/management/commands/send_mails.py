@@ -12,8 +12,8 @@ from django.db.models import Q
 from django.db.models import F
 
 # Import from dbs
-from project.crma.models import EmailScheduler
-from project.crma.models import ST_PENDING, ST_SENT, ST_ERROR
+from crma.models import EmailScheduler
+from crma.models import ST_PENDING, ST_SENT, ST_ERROR
 
 # EMAIL SCAN FREQUENCY
 SCAN_EVERY = 30

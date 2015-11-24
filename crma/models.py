@@ -22,7 +22,7 @@ from djangocms_text_ckeditor.fields import HTMLField
 from timedelta.fields import TimedeltaField
 
 # Import from here
-from project.crma.utils import encode_id, generate_token
+from .utils import encode_id, generate_token
 
 
 ST_SENT = 'sent'
