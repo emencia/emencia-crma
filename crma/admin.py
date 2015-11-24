@@ -11,7 +11,7 @@ from django.db.models import Max
 from django.utils.translation import ugettext as _
 
 # Import from here
-from project.crma import models
+from crma import models
 
 # Import from Django Model-Translation
 from modeltranslation.admin import TranslationAdmin
