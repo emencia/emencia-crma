@@ -64,6 +64,7 @@ class Contact(Model):
     def __unicode__(self):
         return self.email
 
+
 class Subscription(Model):
 
     SUBSCRIBED = 'subscribed'
@@ -235,6 +236,9 @@ class EmailScheduler(Model):
 
 
 def subscribe_to_channel(contact, channel, extra_context=''):
+    if isinstance(channel, basestring):
+        channel = Channel.objects.get(title=channel)
+
     subscription = Subscription.get_or_create(contact, channel)
     if not subscription.state == Subscription.SUBSCRIBED:
         subscription.state = Subscription.SUBSCRIBED
@@ -270,7 +274,7 @@ def unsubscribe_from_channel(contact, channel):
     # If the user is not subscribed then we exit
     if not subs or subs.state == Subscription.UNSUBSCRIBED:
         return
-    
+
     cancel_subscription(subs)
 
 
