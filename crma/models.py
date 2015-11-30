@@ -47,6 +47,8 @@ class Channel(Model):
     """
 
     title = CharField(max_length=80)
+    # We use the channel_id to reference the channel in the code
+    channel_id = CharField(max_length=80, unique=True)
     from_address = CharField(max_length=200,
                              help_text='"Name <email>" or "email"')
     required = BooleanField(default=False)
@@ -110,6 +112,8 @@ class Email(Model):
     enabled = BooleanField()
     channel = ForeignKey(Channel)
     tag = CharField(max_length=30, blank=True)
+    # We use the email_id to reference the email in the code
+    email_id = CharField(max_length=50, unique=True)
 
     unsubscribe_url = 'crma_unsubscribe'
     view_mail_url = 'crma_view_web_mail'

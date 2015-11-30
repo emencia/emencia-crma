@@ -78,6 +78,7 @@ class SubscriptionAdmin(ModelAdmin):
 class ChannelAdmin(ModelAdmin):
     list_display = ('title', 'from_address', 'required')
     list_filter = ('title', 'from_address', 'required')
+    prepopulated_fields = {"channel_id": ("title",)}
 
 
 class ContactAdmin(ModelAdmin):
