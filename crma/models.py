@@ -272,6 +272,9 @@ def unsubscribe_from_channel(contact, channel):
     if isinstance(channel, basestring):
         channel = Channel.objects.get(title=channel)
 
+    if isinstance(contact, basestring):
+        contact = Contact.objects.get(email=contact)
+
     subs = Subscription.objects.filter(contact=contact, channel=channel)
 
     # If the user is not subscribed then we exit
