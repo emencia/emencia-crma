@@ -4,6 +4,7 @@
 import random
 import sha
 import json
+import bleach
 
 # Import from Django
 from django.db.models import Model, ForeignKey, ManyToManyField, TextField
@@ -82,7 +83,7 @@ class Subscription(Model):
     unsubscribe_key = CharField(_('unsubscribe key'), max_length=40)
 
     @classmethod
-    def create_unsubscribe_key (cls, to_address):
+    def create_unsubscribe_key(cls, to_address):
         salt = sha.new(str(random.random())).hexdigest()[:5]
         return sha.new(salt+to_address).hexdigest()
 
@@ -117,10 +118,6 @@ class Email(Model):
 
     unsubscribe_url = 'crma_unsubscribe'
     view_mail_url = 'crma_view_web_mail'
-
-    def __unicode__(self):
-        email = self.channel.title
-        return '%s - %s' % (email, self.interval)
 
     def get_full_path(self, path):
         current_site = Site.objects.get_current()
@@ -241,7 +238,7 @@ class EmailScheduler(Model):
 
 def subscribe_to_channel(contact, channel, extra_context=''):
     if isinstance(channel, basestring):
-        channel = Channel.objects.get(title=channel)
+        channel = Channel.objects.get(channel_id=channel)
 
     subscription = Subscription.get_or_create(contact, channel)
     if not subscription.state == Subscription.SUBSCRIBED:
@@ -261,7 +258,7 @@ def subscribe_to_channel(contact, channel, extra_context=''):
 
 
 def cancel_pending_mails(filters):
-    pending_mails = EmailScheduler.objects.filter(status==ST_PENDING)
+    pending_mails = EmailScheduler.objects.filter(status=ST_PENDING)
     pending_mails.filter(**filters).update(status=ST_CANCELED)
 
 
@@ -274,10 +271,11 @@ def cancel_subscription(subscription):
 
 def unsubscribe_from_channel(contact, channel):
     if isinstance(channel, basestring):
-        channel = Channel.objects.get(title=channel)
+        channel = Channel.objects.get(channel_id=channel)
 
     if isinstance(contact, basestring):
-        contact = Contact.objects.get(email=contact)
+        contacts = Contact.objects.get(email=contact)
+        contact = contacts[0] if contacts else None
 
     subs = Subscription.objects.filter(contact=contact, channel=channel)
 
