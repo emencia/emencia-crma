@@ -100,7 +100,8 @@ class Subscription(Model):
 
         info = Subscription(contact=contact, channel=channel,
                             state=Subscription.SUBSCRIBED)
-        info.unsubscribe_key = Subscription.create_unsubscribe_key(contact.email)
+        unsubscribe_key = Subscription.create_unsubscribe_key(contact.email)
+        info.unsubscribe_key = unsubscribe_key
         info.save()
         return info
 
@@ -255,6 +256,21 @@ def subscribe_to_channel(contact, channel, extra_context=''):
                                       contact=contact,
                                       status=ST_PENDING,
                                       extra_context=extra_ctxt)
+
+
+def schedule_email(email_id, contact, context):
+    email = Email.objects.get(email_id=email_id)
+    subscription = Subscription.get_or_create(contact, email.channel)
+    if subscription.state != Subscription.SUBSCRIBED:
+        return
+
+    ctxt = json.dumps(context)
+    EmailScheduler.objects.create(email=email,
+                                  lang=contact.lang,
+                                  from_address=email.channel.from_address,
+                                  contact=contact,
+                                  status=ST_PENDING,
+                                  extra_context=ctxt)
 
 
 def cancel_pending_mails(filters):
