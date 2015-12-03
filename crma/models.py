@@ -148,24 +148,24 @@ class Email(Model):
 
         return 'en'
 
-    def get_mail_html(self, contact):
+    def get_mail_html(self, data):
         """
-        contact: dict with the following data:
+        data: dict with the following data:
                 - contact: Contact instance
                 - unsubscribe_key: for the current channel
                 - lang: lang we use to send the email
                 - extra_context: dict with context fields for the template
         """
-        lang = self.get_language(contact['lang'])
+        lang = self.get_language(data['lang'])
         activate(lang)  # activate user language
 
         # Generate unsubscribe url
         unsubscribe_path = reverse(self.unsubscribe_url,
-                                   args=(contact['unsubscribe_key'],))
+                                   args=(data['unsubscribe_key'],))
         unsubscribe_url = self.get_full_path(unsubscribe_path)
 
         # Generate view web email url
-        params = (encode_id(contact['contact'].id), generate_token(contact))
+        params = (encode_id(data['contact'].id), generate_token(data))
         viewmail_path = reverse(self.view_mail_url, args=params)
         viewmail_url = self.get_full_path(viewmail_path)
 
@@ -177,40 +177,39 @@ class Email(Model):
                    'UNSUBSCRIBE_URL': unsubscribe_url,
                    'VIEWMAIL_URL': viewmail_url,
                    }
-        context.update(contact['extra_context'])
+        context.update(data['extra_context'])
         context = Context(context)
 
         body = Template(body_html).render(context)
         subject = Template(subject).render(context)
         return body, subject
 
-    def send(self, contact):
+    def send(self, data):
         """
-        contact: dictionary
+        data: dictionary
             - contact: Contact instance
             - lang: Language code
             - from_name: Name to display in the email address
-            - to_address: contact email address
             - extra_context: dict with variables to add to the template context
 
         return False is the mail is not sent else True
         """
-        to_address = contact['to_address']
-        subscribed = Subscription.get_or_create(contact['contact'],
-                                                self.channel)
+        contact = data['contact']
+        to_address = contact.email
+        subscribed = Subscription.get_or_create(contact, self.channel)
 
         # If the user say he doesn't want emails, we don't send the email
-        if not subscribed.status == Subscription.SUBSCRIBED:
+        if not subscribed.state == Subscription.SUBSCRIBED:
             return False
 
-        contact['unsubscribe_key'] = subscribed.unsubscribe_key
+        data['unsubscribe_key'] = subscribed.unsubscribe_key
 
         # We can send the email
-        addr = self.email_type.from_address
-        body_html, subject = self.get_mail_html(contact)
+        addr = self.channel.from_address
+        body_html, subject = self.get_mail_html(data)
         body_text = bleach.clean(body_html)
         email_to = [to_address]
-        email_from = '%s <%s>' % (contact['from_name'], addr)
+        email_from = '%s <%s>' % (data['from_name'], addr)
 
         headers = {'X-Tag': self.tag}
         msg = EmailMultiAlternatives(subject, body_text, email_from, email_to,

@@ -1,11 +1,10 @@
 """pilot_academy.api.urls"""
 
 # Import from Django
-from django.conf.urls.defaults import url
-from django.conf.urls.defaults import patterns
+from django.conf.urls import patterns, url
 
 # Import from Pilot-Academy
-from .views import ViewWebMail, UnsubscribeCompleted, UnsubscribeView
+from crma.views import ViewWebMail, UnsubscribeCompleted, UnsubscribeView
 
 
 urlpatterns = patterns('',

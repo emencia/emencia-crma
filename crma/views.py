@@ -9,9 +9,8 @@ from django.http import Http404
 
 # Import from here
 from .models import Subscription, EmailScheduler
-from .models.email import ST_PENDING, ST_CANCELED
-from .models.email import cancel_subscription
-from pilot_academy.ar3.utils import decode_id, generate_token
+from .models import cancel_subscription
+from .utils import decode_id, generate_token
 
 
 class UnsubscribeCompleted(TemplateView):
@@ -49,11 +48,11 @@ class ViewWebMail(View):
             return Http404
 
         # Read the related unsubscribe token
-        channel= item.email.channel
+        channel = item.email.channel
         subscribed = Subscription.get_or_create(item.contact, channel)
         contact['unsubscribe_key'] = subscribed.unsubscribe_key
 
         # Create the email body and show it
         body, subject = item.email.get_mail_html(contact)
         return render(request, self.template_name, {'body': body,
-                                                    'subject':subject,})
+                                                    'subject': subject, })

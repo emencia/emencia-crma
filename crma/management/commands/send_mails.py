@@ -1,7 +1,11 @@
 # -*- coding: UTF-8 -*-
 
 # Import from the Standard Library
-import time, os, sys, json
+import time
+import os
+import sys
+import json
+
 from datetime import datetime
 from smtplib import SMTPRecipientsRefused, SMTPResponseException
 
@@ -44,17 +48,17 @@ class Command(BaseCommand):
             emails = EmailScheduler.objects.filter(status=ST_PENDING)
             mails = get_mails_to_send(emails, now)
 
-            if not mails.exists():
+            if not mails:
                 time.sleep(SCAN_EVERY)
                 continue
 
             i = 0
-            for mail in mails.iterator():
+            for mail in mails:
                 data = {
                     'id': mail.id,
                     'lang': mail.lang,
-                    'from_name': mail.from_name,
-                    'to_address': mail.to_address,
+                    'from_name': '',
+                    'contact': mail.contact,
                     'extra_context': json.loads(mail.extra_context),
                 }
 
@@ -81,5 +85,5 @@ class Command(BaseCommand):
                     i += 1
 
             print '%s - Sent %d emails' % (now, i)
-            ## SLEEP
+            # SLEEP
             time.sleep(SCAN_EVERY)

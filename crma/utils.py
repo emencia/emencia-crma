@@ -15,9 +15,10 @@ def get_request_ip(request):
     return meta.get('REMOTE_ADDR')
 
 
-def generate_token(contact):
-    value = '%d%s%s' % (contact['id'], settings.SECRET_KEY,
-                        contact['to_address'].encode('utf-8'))
+def generate_token(data):
+    contact = data['contact']
+    value = '%d%s%s' % (contact.pk, settings.SECRET_KEY,
+                        contact.email.encode('utf-8'))
     return sha_constructor(value).hexdigest()
 
 
