@@ -10,6 +10,7 @@ from django.core.management.base import BaseCommand
 from django.utils.timezone import utc
 from django.db.models import Q
 from django.db.models import F
+from django.conf import settings
 
 # Import from dbs
 from crma.models import EmailScheduler
@@ -17,6 +18,20 @@ from crma.models import ST_PENDING, ST_SENT, ST_ERROR
 
 # EMAIL SCAN FREQUENCY
 SCAN_EVERY = 30
+
+
+# PostgreSQL or SQLite
+engine = settings.DATABASES['default']['ENGINE']
+if engine == 'django.db.backends.sqlite3':
+    def get_mails_to_send(emails, now):
+        for email in emails.iterator():
+            if email.ctime < now - email.email.interval:
+                yield email
+else:
+    def get_mails_to_send(emails, now):
+        emails = emails.filter(Q(ctime__lt=(now - F("email__interval"))))
+        return emails.iterator()
+
 
 class Command(BaseCommand):
 
@@ -27,7 +42,7 @@ class Command(BaseCommand):
             # Emails to send
             now = datetime.utcnow().replace(tzinfo=utc)
             emails = EmailScheduler.objects.filter(status=ST_PENDING)
-            mails = emails.filter(Q(ctime__lt=(now - F("email__interval"))))
+            mails = get_mails_to_send(emails, now)
 
             if not mails.exists():
                 time.sleep(SCAN_EVERY)
