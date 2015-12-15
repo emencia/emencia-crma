@@ -75,10 +75,20 @@ class SubscriptionAdmin(ModelAdmin):
     readonly_fields = ('unsubscribe_key', )
 
 
-class ChannelAdmin(ModelAdmin):
+class ChannelAdmin(TranslationAdmin):
     list_display = ('title', 'from_address', 'required')
     list_filter = ('title', 'from_address', 'required')
     prepopulated_fields = {"channel_id": ("title",)}
+
+    class Media:
+        js = (
+            'modeltranslation/js/force_jquery.js',
+            join(settings.STATIC_URL, 'js/jquery-ui.js'),
+            'modeltranslation/js/tabbed_translation_fields.js',
+        )
+        css = {
+            'screen': ('modeltranslation/css/tabbed_translation_fields.css',),
+        }
 
 
 class ContactAdmin(ModelAdmin):
