@@ -16,6 +16,7 @@ from django.template import Context, Template
 from django.utils.translation import ugettext_lazy as _, activate
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
+from django.core.exceptions import ObjectDoesNotExist
 
 # Import from ...
 from djangocms_text_ckeditor.fields import HTMLField
@@ -327,7 +328,10 @@ def unsubscribe_from_channel(contact, channel):
         contacts = Contact.objects.get(email=contact)
         contact = contacts[0] if contacts else None
 
-    subs = Subscription.objects.filter(contact=contact, channel=channel)
+    try:
+        subs = Subscription.objects.get(contact=contact, channel=channel)
+    except ObjectDoesNotExist:
+        subs = None
 
     # If the user is not subscribed then we exit
     if not subs or subs.state == Subscription.UNSUBSCRIBED:
