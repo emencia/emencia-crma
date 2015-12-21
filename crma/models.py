@@ -293,19 +293,22 @@ def subscribe_to_channel(contact, channel, extra_context=''):
                                       extra_context=extra_ctxt)
 
 
-def schedule_email(email_id, contact, context):
+def schedule_email(email_id, contact, context, plan_date=None):
     email = Email.objects.get(email_id=email_id)
     subscription = Subscription.get_or_create(contact, email.channel)
     if subscription.state != Subscription.SUBSCRIBED:
         return
 
     ctxt = json.dumps(context)
-    EmailScheduler.objects.create(email=email,
-                                  lang=contact.lang,
-                                  from_address=email.channel.from_address,
-                                  contact=contact,
-                                  status=ST_PENDING,
-                                  extra_context=ctxt)
+    es = EmailScheduler.objects.create(email=email,
+                                       lang=contact.lang,
+                                       from_address=email.channel.from_address,
+                                       contact=contact,
+                                       status=ST_PENDING,
+                                       extra_context=ctxt)
+    if plan_date is not None:
+        es.ctime = plan_date
+        es.save()
 
 
 def cancel_pending_mails(filters):
