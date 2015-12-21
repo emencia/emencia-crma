@@ -5,6 +5,7 @@ import random
 import sha
 import json
 import bleach
+import datetime
 
 # Import from Django
 from django.db.models import Model, ForeignKey, ManyToManyField, TextField
@@ -234,6 +235,40 @@ class EmailScheduler(Model):
     contact = ForeignKey(Contact)
     status = CharField(max_length=20, choices=STATUS_CHOICES, default=ST_SENT)
     extra_context = TextField(blank=True)
+
+
+def schedule_or_update_channel(channel, contact, extra_context=''):
+    """
+    Check a channel schedule. Create or update (date) the planification of
+    emails. Is useful for channels of type reminder login
+    """
+    if isinstance(channel, basestring):
+        channel = Channel.objects.get(channel_id=channel)
+
+    subscription = Subscription.get_or_create(contact, channel)
+    if not subscription.state == Subscription.SUBSCRIBED:
+        return
+
+    # Now we schedule or update the mails to send
+    mails = Email.objects.filter(channel=channel, enabled=True)
+    extra_ctxt = json.dumps(extra_context)
+    for mail in mails:
+        planned_emails = EmailScheduler.objects.filter(email=mail,
+                                                       status=ST_PENDING,
+                                                       contact=contact)
+        # CREATE
+        if len(planned_emails) == 0:
+            EmailScheduler.objects.create(email=mail,
+                                          lang=contact.lang,
+                                          from_address=channel.from_address,
+                                          contact=contact,
+                                          status=ST_PENDING,
+                                          extra_context=extra_ctxt)
+        else:
+            # UPDATE
+            pe = planned_emails[0]
+            pe.ctime = datetime.datetime.now()
+            pe.save()
 
 
 def subscribe_to_channel(contact, channel, extra_context=''):
