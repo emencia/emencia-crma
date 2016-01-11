@@ -124,6 +124,11 @@ class Email(Model):
         current_site = Site.objects.get_current()
         return "http://%s%s" % (current_site.domain, path)
 
+    def get_unsubscribe_url(self, unsubscribe_key=None):
+        unsubscribe_path = reverse(self.unsubscribe_url,
+                                   args=(unsubscribe_key,))
+        return self.get_full_path(unsubscribe_path)
+
     @staticmethod
     def get_lang_code(lang):
         default = 'en'
@@ -160,9 +165,8 @@ class Email(Model):
         activate(lang)  # activate user language
 
         # Generate unsubscribe url
-        unsubscribe_path = reverse(self.unsubscribe_url,
-                                   args=(data['unsubscribe_key'],))
-        unsubscribe_url = self.get_full_path(unsubscribe_path)
+        unsubscribe_url = self.get_unsubscribe_url(data['unsubscribe_key'])
+
 
         # Generate view web email url
         params = (encode_id(data['contact'].id), generate_token(data))
