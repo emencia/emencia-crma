@@ -5,6 +5,7 @@ import random
 import sha
 import json
 import bleach
+import datetime
 
 # Import from Django
 from django.db.models import Model, ForeignKey, ManyToManyField, TextField
@@ -15,6 +16,7 @@ from django.template import Context, Template
 from django.utils.translation import ugettext_lazy as _, activate
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
+from django.core.exceptions import ObjectDoesNotExist
 
 # Import from ...
 from djangocms_text_ckeditor.fields import HTMLField
@@ -240,6 +242,40 @@ class EmailScheduler(Model):
     extra_context = TextField(blank=True)
 
 
+def schedule_or_update_channel(channel, contact, extra_context=''):
+    """
+    Check a channel schedule. Create or update (date) the planification of
+    emails. Is useful for channels of type reminder login
+    """
+    if isinstance(channel, basestring):
+        channel = Channel.objects.get(channel_id=channel)
+
+    subscription = Subscription.get_or_create(contact, channel)
+    if not subscription.state == Subscription.SUBSCRIBED:
+        return
+
+    # Now we schedule or update the mails to send
+    mails = Email.objects.filter(channel=channel, enabled=True)
+    extra_ctxt = json.dumps(extra_context)
+    for mail in mails:
+        planned_emails = EmailScheduler.objects.filter(email=mail,
+                                                       status=ST_PENDING,
+                                                       contact=contact)
+        # CREATE
+        if len(planned_emails) == 0:
+            EmailScheduler.objects.create(email=mail,
+                                          lang=contact.lang,
+                                          from_address=channel.from_address,
+                                          contact=contact,
+                                          status=ST_PENDING,
+                                          extra_context=extra_ctxt)
+        else:
+            # UPDATE
+            pe = planned_emails[0]
+            pe.ctime = datetime.datetime.now()
+            pe.save()
+
+
 def subscribe_to_channel(contact, channel, extra_context=''):
     if isinstance(channel, basestring):
         channel = Channel.objects.get(channel_id=channel)
@@ -261,19 +297,22 @@ def subscribe_to_channel(contact, channel, extra_context=''):
                                       extra_context=extra_ctxt)
 
 
-def schedule_email(email_id, contact, context):
+def schedule_email(email_id, contact, context, plan_date=None):
     email = Email.objects.get(email_id=email_id)
     subscription = Subscription.get_or_create(contact, email.channel)
     if subscription.state != Subscription.SUBSCRIBED:
         return
 
     ctxt = json.dumps(context)
-    EmailScheduler.objects.create(email=email,
-                                  lang=contact.lang,
-                                  from_address=email.channel.from_address,
-                                  contact=contact,
-                                  status=ST_PENDING,
-                                  extra_context=ctxt)
+    es = EmailScheduler.objects.create(email=email,
+                                       lang=contact.lang,
+                                       from_address=email.channel.from_address,
+                                       contact=contact,
+                                       status=ST_PENDING,
+                                       extra_context=ctxt)
+    if plan_date is not None:
+        es.ctime = plan_date
+        es.save()
 
 
 def cancel_pending_mails(filters):
@@ -296,7 +335,10 @@ def unsubscribe_from_channel(contact, channel):
         contacts = Contact.objects.get(email=contact)
         contact = contacts[0] if contacts else None
 
-    subs = Subscription.objects.filter(contact=contact, channel=channel)
+    try:
+        subs = Subscription.objects.get(contact=contact, channel=channel)
+    except ObjectDoesNotExist:
+        subs = None
 
     # If the user is not subscribed then we exit
     if not subs or subs.state == Subscription.UNSUBSCRIBED:
