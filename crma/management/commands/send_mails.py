@@ -9,6 +9,8 @@ import json
 from datetime import datetime
 from smtplib import SMTPRecipientsRefused, SMTPResponseException
 
+from optparse import make_option
+
 # Import from Django
 from django.core.management.base import BaseCommand
 from django.utils.timezone import utc
@@ -37,10 +39,20 @@ else:
         return emails.iterator()
 
 
-class Command(BaseCommand):
+OPTIONS = [
+    # Name       Action        Dest     Default
+    ('--debug',  'store_true', 'debug', False),
+]
 
-    def handle(self, *args, **kw):
+OPTIONS = [ make_option(name, action=action, dest=dest, default=default)
+                    for name, action, dest, default in OPTIONS ]
+
+class Command(BaseCommand):
+    option_list = BaseCommand.option_list + tuple(OPTIONS)
+
+    def handle(self, *args, **options):
         sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+        debug_mode = options['debug']
 
         while True:
             # Emails to send
@@ -63,6 +75,8 @@ class Command(BaseCommand):
                 }
 
                 try:
+                    if debug_mode:
+                        data['contact'].email = settings.CRMA_DEBUG_EMAIL
                     mail.email.send(data)
                 except SMTPRecipientsRefused, e:
                     print 'Error: ', mail.pk
