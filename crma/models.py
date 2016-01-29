@@ -240,7 +240,7 @@ class EmailScheduler(Model):
     contact = ForeignKey(Contact)
     status = CharField(max_length=20, choices=STATUS_CHOICES, default=ST_SENT)
     extra_context = TextField(blank=True)
-
+    trace_error = TextField(blank=True)
 
 def schedule_or_update_channel(channel, contact, extra_context=''):
     """

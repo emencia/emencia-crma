@@ -39,7 +39,7 @@ class EmailSchedulerAdmin(ModelAdmin):
 
     search_fields = ('from_address', 'to_address')
     list_filter = ('status', 'lang', 'email')
-    readonly_fields = ('extra_context', )
+    readonly_fields = ('extra_context', 'trace_error')
 
     fieldsets = (
             (_("Emails"), {
@@ -52,7 +52,7 @@ class EmailSchedulerAdmin(ModelAdmin):
             )}),
             (_("Context"), {
             'fields': (
-                ('extra_context', ),
+                ('extra_context', 'trace_error'),
             )}),
         )
 

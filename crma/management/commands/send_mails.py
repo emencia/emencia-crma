@@ -66,13 +66,24 @@ class Command(BaseCommand):
 
             i = 0
             for mail in mails:
-                data = {
-                    'id': mail.id,
-                    'lang': mail.lang,
-                    'from_name': '',
-                    'contact': mail.contact,
-                    'extra_context': json.loads(mail.extra_context),
-                }
+                if not mail.extra_context:
+                    extra_context = {}
+                else:
+                    extra_context = mail.extra_context
+                try:
+                    data = {
+                        'id': mail.id,
+                        'lang': mail.lang,
+                        'from_name': '',
+                        'contact': mail.contact,
+                        'extra_context': json.loads(extra_context),
+                    }
+                except Exception, e:
+                    print 'Error: ', mail.pk
+                    mail.status = ST_ERROR
+                    mail.trace_error = e
+                    mail.save()
+
 
                 try:
                     if debug_mode:
@@ -80,18 +91,20 @@ class Command(BaseCommand):
                     mail.email.send(data)
                 except SMTPRecipientsRefused, e:
                     print 'Error: ', mail.pk
-                    print repr(e)
+                    mail.trace_error = e
                     mail.status = ST_ERROR
                     mail.save()
                 except SMTPResponseException, e:
                     print 'Error: ', mail.pk
-                    print repr(e)
-                    if e.smtp_code >= 500:
+                    if e.smt.p_code >= 500:
                         mail.status = ST_ERROR
+                        mail.trace_error = e
                         mail.save()
                 except Exception, e:
                     print 'Error: ', mail.pk
-                    print repr(e)
+                    mail.status = ST_ERROR
+                    mail.trace_error = e
+                    mail.save()
                 else:
                     mail.status = ST_SENT
                     mail.sent_time = datetime.utcnow().replace(tzinfo=utc)
