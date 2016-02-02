@@ -74,7 +74,7 @@ class Command(BaseCommand):
                     data = {
                         'id': mail.id,
                         'lang': mail.lang,
-                        'from_name': '',
+                        'from_name': 'contact@soonvibes.com',
                         'contact': mail.contact,
                         'extra_context': json.loads(extra_context),
                     }
