@@ -215,7 +215,7 @@ class Email(Model):
         body_html, subject = self.get_mail_html(data)
         body_text = bleach.clean(body_html)
         email_to = [to_address]
-        email_from = '%s <%s>' % (data['from_name'], addr)
+        email_from =  addr
 
         headers = {'X-Tag': self.tag}
         msg = EmailMultiAlternatives(subject, body_text, email_from, email_to,
