@@ -5,9 +5,8 @@ from os.path import join
 
 # Import from Django
 from django.conf import settings
-from django.contrib.admin import ModelAdmin, SimpleListFilter
+from django.contrib.admin import ModelAdmin
 from django.contrib import admin
-from django.db.models import Max
 from django.utils.translation import ugettext as _
 
 # Import from here
