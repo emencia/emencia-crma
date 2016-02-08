@@ -93,7 +93,8 @@ class ChannelAdmin(TranslationAdmin):
 
 class ContactAdmin(ModelAdmin):
     list_display = ('email', 'lang')
-    search_fields = ('email', )
+    list_filter = ('lang',)
+    search_fields = ('email',)
 
 
 admin.site.register(models.Channel, ChannelAdmin)
