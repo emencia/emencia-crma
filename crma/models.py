@@ -302,8 +302,10 @@ def schedule_email(email_id, contact, context, plan_date=None):
     subscription = Subscription.get_or_create(contact, email.channel)
     if subscription.state != Subscription.SUBSCRIBED:
         return
-
+    if not email.enabled:
+        return
     ctxt = json.dumps(context)
+
     es = EmailScheduler.objects.create(email=email,
                                        lang=contact.lang,
                                        from_address=email.channel.from_address,
