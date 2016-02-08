@@ -36,7 +36,7 @@ class EmailSchedulerAdmin(ModelAdmin):
     list_display = ('from_address', 'contact', 'email', 'lang',
                     'ctime', 'sent_time', 'status')
 
-    search_fields = ('from_address', 'email__subject')
+    search_fields = ('from_address', 'email__subject', 'contact__email')
     list_filter = ('status', 'lang', 'email')
     readonly_fields = ('extra_context', 'trace_error')
 
