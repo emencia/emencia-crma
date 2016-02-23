@@ -34,7 +34,7 @@ class EmailAdmin(TranslationAdmin):
 
 class EmailSchedulerAdmin(ModelAdmin):
     list_display = ('from_address', 'contact', 'email', 'lang',
-                    'ctime', 'sent_time', 'status')
+                    'ctime', 'sched_time','sent_time', 'status')
 
     search_fields = ('from_address', 'email__subject', 'contact__email')
     list_filter = ('status', 'lang', 'email')
@@ -43,7 +43,7 @@ class EmailSchedulerAdmin(ModelAdmin):
     fieldsets = (
             (_("Emails"), {
             'fields': (
-                'from_address', 'contact', 'email', 'lang',
+                'from_address', 'contact', 'email', 'lang','sched_time'
             )}),
             (_("Status"), {
             'fields': (

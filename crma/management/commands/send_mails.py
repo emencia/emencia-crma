@@ -31,11 +31,11 @@ engine = settings.DATABASES['default']['ENGINE']
 if engine == 'django.db.backends.sqlite3':
     def get_mails_to_send(emails, now):
         for email in emails.iterator():
-            if email.ctime < now - email.email.interval:
+            if email.sched_time < now - email.email.interval:
                 yield email
 else:
     def get_mails_to_send(emails, now):
-        emails = emails.filter(Q(ctime__lt=(now - F("email__interval"))))
+        emails = emails.filter(Q(sched_time__lt=(now - F("email__interval"))))
         return emails.iterator()
 
 

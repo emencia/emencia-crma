@@ -233,6 +233,7 @@ class Email(Model):
 class EmailScheduler(Model):
 
     ctime = DateTimeField(auto_now_add=True)
+    sched_time = DateTimeField(null=True)
     sent_time = DateTimeField(null=True, blank=True)
     email = ForeignKey(Email)
     lang = CharField(max_length=10, blank=True)
@@ -272,7 +273,7 @@ def schedule_or_update_channel(channel, contact, extra_context=''):
         else:
             # UPDATE
             pe = planned_emails[0]
-            pe.ctime = datetime.datetime.now()
+            pe.sched_time = datetime.datetime.now()
             pe.save()
 
 
@@ -313,8 +314,12 @@ def schedule_email(email_id, contact, context, plan_date=None):
                                        status=ST_PENDING,
                                        extra_context=ctxt)
     if plan_date is not None:
-        es.ctime = plan_date
+        es.sched_time = plan_date
         es.save()
+    else:
+        es.sched_time = es.ctime
+        es.save()
+
 
 
 def cancel_pending_mails(filters):
