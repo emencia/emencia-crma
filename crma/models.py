@@ -233,7 +233,7 @@ class Email(Model):
 class EmailScheduler(Model):
 
     ctime = DateTimeField(auto_now_add=True)
-    sched_time = DateTimeField(null=True)
+    sched_time = DateTimeField()
     sent_time = DateTimeField(null=True, blank=True)
     email = ForeignKey(Email)
     lang = CharField(max_length=10, blank=True)
@@ -258,22 +258,26 @@ def schedule_or_update_channel(channel, contact, extra_context=''):
     # Now we schedule or update the mails to send
     mails = Email.objects.filter(channel=channel, enabled=True)
     extra_ctxt = json.dumps(extra_context)
+    now = datetime.datetime.now()
     for mail in mails:
         planned_emails = EmailScheduler.objects.filter(email=mail,
                                                        status=ST_PENDING,
                                                        contact=contact)
         # CREATE
         if len(planned_emails) == 0:
+            sched_time = now + mail.interval
             EmailScheduler.objects.create(email=mail,
                                           lang=contact.lang,
                                           from_address=channel.from_address,
                                           contact=contact,
                                           status=ST_PENDING,
-                                          extra_context=extra_ctxt)
+                                          extra_context=extra_ctxt,
+                                          sched_time=sched_time,
+                                          )
         else:
             # UPDATE
             pe = planned_emails[0]
-            pe.sched_time = datetime.datetime.now()
+            pe.sched_time = now
             pe.save()
 
 
@@ -307,18 +311,19 @@ def schedule_email(email_id, contact, context, plan_date=None):
         return
     ctxt = json.dumps(context)
 
-    es = EmailScheduler.objects.create(email=email,
-                                       lang=contact.lang,
-                                       from_address=email.channel.from_address,
-                                       contact=contact,
-                                       status=ST_PENDING,
-                                       extra_context=ctxt)
     if plan_date is not None:
-        es.sched_time = plan_date
-        es.save()
+        sched_time = plan_date
     else:
-        es.sched_time = es.ctime
-        es.save()
+        sched_time = datetime.datetime.now() + email.interval
+
+    EmailScheduler.objects.create(email=email,
+                                  lang=contact.lang,
+                                  from_address=email.channel.from_address,
+                                  contact=contact,
+                                  status=ST_PENDING,
+                                  extra_context=ctxt,
+                                  sched_time=sched_time,
+                                  )
 
 
 
