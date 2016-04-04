@@ -16,7 +16,6 @@ from django.template import Context, Template
 from django.utils.translation import ugettext_lazy as _, activate
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
-from django.core.exceptions import ObjectDoesNotExist
 
 # Import from ...
 from djangocms_text_ckeditor.fields import HTMLField
@@ -169,7 +168,6 @@ class Email(Model):
         # Generate unsubscribe url
         unsubscribe_url = self.get_unsubscribe_url(data['unsubscribe_key'])
 
-
         # Generate view web email url
         params = (encode_id(data['contact'].id), generate_token(data))
         viewmail_path = reverse(self.view_mail_url, args=params)
@@ -215,7 +213,7 @@ class Email(Model):
         body_html, subject = self.get_mail_html(data)
         body_text = bleach.clean(body_html)
         email_to = [to_address]
-        email_from =  addr
+        email_from = addr
 
         headers = {'X-Tag': self.tag}
         msg = EmailMultiAlternatives(subject, body_text, email_from, email_to,
@@ -242,6 +240,7 @@ class EmailScheduler(Model):
     status = CharField(max_length=20, choices=STATUS_CHOICES, default=ST_SENT)
     extra_context = TextField(blank=True)
     trace_error = TextField(blank=True)
+
 
 def schedule_or_update_channel(channel, contact, extra_context=''):
     """
@@ -326,7 +325,6 @@ def schedule_email(email_id, contact, context, plan_date=None):
                                   )
 
 
-
 def cancel_pending_mails(filters):
     pending_mails = EmailScheduler.objects.filter(status=ST_PENDING)
     pending_mails.filter(**filters).update(status=ST_CANCELED)
@@ -344,19 +342,16 @@ def unsubscribe_from_channel(contact, channel):
         channel = Channel.objects.get(channel_id=channel)
 
     if isinstance(contact, basestring):
-        contacts = Contact.objects.get(email=contact)
-        contact = contacts[0] if contacts else None
+        contacts = Contact.objects.filter(email=contact)
+    else:
+        contacts = [contact]
 
-    try:
-        subs = Subscription.objects.get(contact=contact, channel=channel)
-    except ObjectDoesNotExist:
-        subs = None
+    qs = Subscription.objects.filter(channel=channel)
+    qs = qs.exclude(state=Subscription.UNSUBSCRIBED)
 
-    # If the user is not subscribed then we exit
-    if not subs or subs.state == Subscription.UNSUBSCRIBED:
-        return
-
-    cancel_subscription(subs)
+    for contact in contacts:
+        for sub in qs.filter(contact=contact):
+            cancel_subscription(sub)
 
 
 def disable_email(email):
