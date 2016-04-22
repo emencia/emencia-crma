@@ -293,12 +293,15 @@ def subscribe_to_channel(contact, channel, extra_context=''):
     mails = Email.objects.filter(channel=channel, enabled=True)
     extra_ctxt = json.dumps(extra_context)
     for mail in mails:
+        sched_time = datetime.datetime.now() + mail.interval
         EmailScheduler.objects.create(email=mail,
                                       lang=contact.lang,
                                       from_address=channel.from_address,
                                       contact=contact,
                                       status=ST_PENDING,
-                                      extra_context=extra_ctxt)
+                                      extra_context=extra_ctxt,
+                                      sched_time=sched_time,
+                                      )
 
 
 def schedule_email(email_id, contact, context, plan_date=None):
