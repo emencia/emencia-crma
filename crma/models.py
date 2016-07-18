@@ -69,6 +69,11 @@ class Contact(Model):
         return self.email
 
 
+class MailingList(Model):
+    title = CharField(max_length=90)
+    members = ManyToManyField(Contact)
+
+
 class Subscription(Model):
 
     SUBSCRIBED = 'subscribed'
