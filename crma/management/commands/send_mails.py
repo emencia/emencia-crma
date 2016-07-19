@@ -15,6 +15,7 @@ from optparse import make_option
 from django.core.management.base import BaseCommand
 from django.utils.timezone import utc
 from django.conf import settings
+from django.db.models import Q
 
 # Import from dbs
 from crma.models import EmailScheduler
@@ -23,10 +24,13 @@ from crma.models import ST_PENDING, ST_SENT, ST_ERROR
 # EMAIL SCAN FREQUENCY
 SCAN_EVERY = 30
 
+CRMA_KEY = settings.CRMA_KEY if hasattr(settings, 'CRMA_KEY') else ''
+
 
 # PostgreSQL or SQLite
 def get_mails_to_send(emails, now):
     emails = emails.filter(sched_time__lt=now)
+    emails = emails.filter(Q(key=CRMA_KEY) | Q(key=''))
     return emails.iterator()
 
 
@@ -35,8 +39,9 @@ OPTIONS = [
     ('--debug',  'store_true', 'debug', False),
 ]
 
-OPTIONS = [ make_option(name, action=action, dest=dest, default=default)
-                    for name, action, dest, default in OPTIONS ]
+OPTIONS = [make_option(name, action=action, dest=dest, default=default)
+                    for name, action, dest, default in OPTIONS]
+
 
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + tuple(OPTIONS)
@@ -74,7 +79,6 @@ class Command(BaseCommand):
                     mail.status = ST_ERROR
                     mail.trace_error = e
                     mail.save()
-
 
                 try:
                     if debug_mode:

@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
 # Import from Python
+import csv
 import random
 import sha
 import json
@@ -35,6 +36,8 @@ STATUS_CHOICES = ((ST_SENT, 'Sent'),
                   (ST_PENDING, 'Pending'),
                   (ST_CANCELED, 'Canceled'),
                   (ST_ERROR, 'Error'),)
+
+CRMA_KEY = settings.CRMA_KEY if hasattr(settings, 'CRMA_KEY') else ''
 
 
 class Channel(Model):
@@ -246,6 +249,11 @@ class EmailScheduler(Model):
     extra_context = TextField(blank=True)
     trace_error = TextField(blank=True)
 
+    # In the settings there is a CRMA_KEY, we only send the emails with
+    # this key. It is a security check to prevent send emails to users
+    # when we import databases from / to production for example.
+    key = CharField(max_length=80, blank=True)
+
 
 def schedule_or_update_channel(channel, contact, extra_context=''):
     """
@@ -277,6 +285,7 @@ def schedule_or_update_channel(channel, contact, extra_context=''):
                                           status=ST_PENDING,
                                           extra_context=extra_ctxt,
                                           sched_time=sched_time,
+                                          key=CRMA_KEY
                                           )
         else:
             # UPDATE
@@ -306,6 +315,7 @@ def subscribe_to_channel(contact, channel, extra_context=''):
                                       status=ST_PENDING,
                                       extra_context=extra_ctxt,
                                       sched_time=sched_time,
+                                      key=CRMA_KEY
                                       )
 
 
@@ -330,6 +340,7 @@ def schedule_email(email_id, contact, context, plan_date=None):
                                   status=ST_PENDING,
                                   extra_context=ctxt,
                                   sched_time=sched_time,
+                                  key=CRMA_KEY
                                   )
 
 
@@ -366,3 +377,20 @@ def disable_email(email):
     cancel_pending_mails({'email': email})
     email.enabled = False
     email.save()
+
+
+def import_contacts(csvfile, mailing_list=''):
+    reader = csv.DictReader(csvfile, restval='')
+
+    if mailing_list:
+        ml = MailingList.objects.create(title=mailing_list)
+
+    for row in reader:
+        data = {
+            'email': row.get('email'),
+            'lang': row.get('lang', '')
+        }
+        contact, c = Contact.objects.get_or_create(**data)
+
+        if mailing_list:
+            ml.members.get_or_create(**data)
