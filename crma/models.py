@@ -76,6 +76,9 @@ class MailingList(Model):
     title = CharField(max_length=90)
     members = ManyToManyField(Contact)
 
+    def __unicode__(self):
+        return self.title
+
 
 class Subscription(Model):
 
@@ -342,6 +345,12 @@ def schedule_email(email_id, contact, context, plan_date=None):
                                   sched_time=sched_time,
                                   key=CRMA_KEY
                                   )
+
+
+def schedule_mailinglist(email_id, mailinglist, context, plan_date=None):
+    ml = MailingList.objects.get(pk=mailinglist)
+    for contact in ml.members.all():
+        schedule_email(email_id, contact, context, plan_date)
 
 
 def cancel_pending_mails(filters):
