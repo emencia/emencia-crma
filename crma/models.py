@@ -75,9 +75,19 @@ class Contact(Model):
 class MailingList(Model):
     title = CharField(max_length=90)
     members = ManyToManyField(Contact)
+    all = BooleanField(default=False,
+        help_text=u'If checked, ignore the "members" field. Every contact in '
+                  u'the database will be considered a member of this mailing '
+                  u'list.')
 
     def __unicode__(self):
         return self.title
+
+    def get_contacts(self):
+        if self.all:
+            return Contact.objects.all()
+
+        return self.members.all()
 
 
 class Subscription(Model):
@@ -355,7 +365,7 @@ def schedule_mailinglist(email_id, mailinglist, context, plan_date=None):
     count = 0
 
     ml = MailingList.objects.get(pk=mailinglist)
-    for contact in ml.members.all():
+    for contact in ml.get_contacts():
         obj = schedule_email(email_id, contact, context, plan_date)
         if obj is not None:
             count += 1
