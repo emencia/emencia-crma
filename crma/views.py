@@ -45,7 +45,7 @@ class ViewWebMail(View):
         token = generate_token(contact)
 
         if token != kwargs['scheduler_token']:
-            return Http404
+            raise Http404
 
         # Read the related unsubscribe token
         channel = item.email.channel
