@@ -326,31 +326,41 @@ def schedule_email(email_id, contact, context, plan_date=None):
     email = Email.objects.get(email_id=email_id)
     subscription = Subscription.get_or_create(contact, email.channel)
     if subscription.state != Subscription.SUBSCRIBED:
-        return
+        return None
+
     if not email.enabled:
-        return
+        return None
+
     ctxt = json.dumps(context)
 
-    if plan_date is not None:
-        sched_time = plan_date
-    else:
-        sched_time = datetime.datetime.now() + email.interval
+    if plan_date is None:
+        plan_date = datetime.datetime.now() + email.interval
 
-    EmailScheduler.objects.create(email=email,
-                                  lang=contact.lang,
-                                  from_address=email.channel.from_address,
-                                  contact=contact,
-                                  status=ST_PENDING,
-                                  extra_context=ctxt,
-                                  sched_time=sched_time,
-                                  key=CRMA_KEY
-                                  )
+    return EmailScheduler.objects.create(
+        email=email,
+        lang=contact.lang,
+        from_address=email.channel.from_address,
+        contact=contact,
+        status=ST_PENDING,
+        extra_context=ctxt,
+        sched_time=plan_date,
+        key=CRMA_KEY,
+        )
 
 
 def schedule_mailinglist(email_id, mailinglist, context, plan_date=None):
+    """
+    Return the number of emails scheduled.
+    """
+    count = 0
+
     ml = MailingList.objects.get(pk=mailinglist)
     for contact in ml.members.all():
-        schedule_email(email_id, contact, context, plan_date)
+        obj = schedule_email(email_id, contact, context, plan_date)
+        if obj is not None:
+            count += 1
+
+    return count
 
 
 def cancel_pending_mails(filters):
