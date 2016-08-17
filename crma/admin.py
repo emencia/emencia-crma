@@ -96,9 +96,14 @@ class ContactAdmin(ModelAdmin):
     search_fields = ('email',)
 
 
+class MailingListAdmin(ModelAdmin):
+    list_display = ('title',)
+    filter_horizontal = ['members']
+
+
 admin.site.register(models.Channel, ChannelAdmin)
 admin.site.register(models.Email, EmailAdmin)
 admin.site.register(models.EmailScheduler, EmailSchedulerAdmin)
 admin.site.register(models.Subscription, SubscriptionAdmin)
 admin.site.register(models.Contact, ContactAdmin)
-admin.site.register(models.MailingList)
+admin.site.register(models.MailingList, MailingListAdmin)
