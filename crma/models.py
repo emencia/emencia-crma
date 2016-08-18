@@ -74,7 +74,7 @@ class Contact(Model):
 
 class MailingList(Model):
     title = CharField(max_length=90)
-    members = ManyToManyField(Contact)
+    members = ManyToManyField(Contact, blank=True)
     all = BooleanField(default=False,
         help_text=u'If checked, ignore the "members" field. Every contact in '
                   u'the database will be considered a member of this mailing '
@@ -88,6 +88,23 @@ class MailingList(Model):
             return Contact.objects.all()
 
         return self.members.all()
+
+
+    def import_contacts(self, csvfile):
+        reader = csv.DictReader(csvfile, restval='')
+        for row in reader:
+            email = row['email']
+            lang = row.get('lang', '')
+            try:
+                contact = Contact.objects.get(email=email)
+            except Contact.DoesNotExist:
+                contact = Contact.objects.create(email=email, lang=lang)
+            else:
+                if lang not in ('', contact.lang):
+                    contact.lang = lang
+                    contact.save()
+
+            self.members.add(contact)
 
 
 class Subscription(Model):
@@ -406,20 +423,3 @@ def disable_email(email):
     cancel_pending_mails({'email': email})
     email.enabled = False
     email.save()
-
-
-def import_contacts(csvfile, mailing_list=''):
-    reader = csv.DictReader(csvfile, restval='')
-
-    if mailing_list:
-        ml = MailingList.objects.create(title=mailing_list)
-
-    for row in reader:
-        data = {
-            'email': row.get('email'),
-            'lang': row.get('lang', '')
-        }
-        contact, c = Contact.objects.get_or_create(**data)
-
-        if mailing_list:
-            ml.members.get_or_create(**data)

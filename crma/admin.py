@@ -7,6 +7,7 @@ from os.path import join
 from django.conf import settings
 from django.contrib.admin import ModelAdmin
 from django.contrib import admin
+from django import forms
 from django.utils.translation import ugettext as _
 
 # Import from here
@@ -96,9 +97,30 @@ class ContactAdmin(ModelAdmin):
     search_fields = ('email',)
 
 
+class MailingListForm(forms.ModelForm):
+    csv = forms.FileField(
+        required=False,
+        help_text=u'The CSV file must have a header line with two columns: '
+                  u'"email" and "lang".',
+    )
+
+    class Meta:
+        model = models.MailingList
+
+
 class MailingListAdmin(ModelAdmin):
     list_display = ('title',)
     filter_horizontal = ['members']
+    form = MailingListForm
+
+    def save_related(self, request, form, formsets, change):
+        proxy = super(MailingListAdmin, self)
+        proxy.save_related(request, form, formsets, change)
+
+        csv = form.cleaned_data['csv']
+        if csv:
+            obj = form.instance
+            obj.import_contacts(csv)
 
 
 admin.site.register(models.Channel, ChannelAdmin)
