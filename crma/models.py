@@ -190,7 +190,7 @@ class Email(Model):
         unsubscribe_url = self.get_unsubscribe_url(data['unsubscribe_key'])
 
         # Generate view web email url
-        params = (encode_id(data['contact'].id), generate_token(data))
+        params = (encode_id(data['id']), generate_token(data))
         viewmail_path = reverse(self.view_mail_url, args=params)
         viewmail_url = self.get_full_path(viewmail_path)
 
