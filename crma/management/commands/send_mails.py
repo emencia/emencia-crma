@@ -1,15 +1,13 @@
 # -*- coding: UTF-8 -*-
 
 # Import from the Standard Library
-import time
-import os
-import sys
-import json
-
 from datetime import datetime
-from smtplib import SMTPRecipientsRefused, SMTPResponseException
-
+import json
 from optparse import make_option
+import os
+from smtplib import SMTPRecipientsRefused, SMTPResponseException
+import sys
+import time
 
 # Import from Django
 from django.core.management.base import BaseCommand
@@ -17,9 +15,11 @@ from django.utils.timezone import utc
 from django.conf import settings
 from django.db.models import Q
 
-# Import from dbs
+# Import from crma
 from crma.models import EmailScheduler
 from crma.models import ST_PENDING, ST_SENT, ST_ERROR
+from crma.signals import email_sent
+
 
 # EMAIL SCAN FREQUENCY
 SCAN_EVERY = 30
@@ -62,10 +62,7 @@ class Command(BaseCommand):
 
             i = 0
             for mail in mails:
-                if not mail.extra_context:
-                    extra_context = {}
-                else:
-                    extra_context = mail.extra_context
+                extra_context = mail.extra_context or {}
                 try:
                     data = {
                         'id': mail.id,
@@ -79,6 +76,7 @@ class Command(BaseCommand):
                     mail.status = ST_ERROR
                     mail.trace_error = e
                     mail.save()
+                    continue
 
                 try:
                     if debug_mode:
@@ -105,6 +103,8 @@ class Command(BaseCommand):
                     mail.sent_time = datetime.utcnow().replace(tzinfo=utc)
                     mail.save()
                     i += 1
+
+                    email_sent.send(sender=mail.__class__, data=data)
 
             print '%s - Sent %d emails' % (now, i)
             # SLEEP
