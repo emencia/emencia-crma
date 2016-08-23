@@ -97,6 +97,12 @@ class ContactAdmin(ModelAdmin):
     search_fields = ('email',)
 
 
+class MembersInline(admin.TabularInline):
+    model = models.MailingList.members.through
+    extra = 0
+    raw_id_fields = ('contact',)
+
+
 class MailingListForm(forms.ModelForm):
     csv = forms.FileField(
         required=False,
@@ -112,6 +118,9 @@ class MailingListAdmin(ModelAdmin):
     list_display = ('title',)
     filter_horizontal = ['members']
     form = MailingListForm
+    exclude = ('members',)
+
+    inlines = [MembersInline]
 
     def save_related(self, request, form, formsets, change):
         proxy = super(MailingListAdmin, self)
