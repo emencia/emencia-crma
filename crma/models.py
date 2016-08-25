@@ -90,11 +90,41 @@ class MailingList(Model):
         return self.members.all()
 
 
-    def import_contacts(self, csvfile):
-        reader = csv.DictReader(csvfile, restval='')
+    @staticmethod
+    def _csv_get_rows(f):
+        reader = csv.DictReader(f, restval='')
         for row in reader:
-            email = row['email']
-            lang = row.get('lang', '')
+            yield row['email'], row.get('lang', '')
+
+
+    @staticmethod
+    def _xls_get_rows(data):
+        from xlrd import open_workbook
+
+        wb = open_workbook(file_contents=data)
+        rows = wb.sheet_by_index(0).get_rows()
+        header = [ x.value for x in rows.next() ]
+        i = header.index('email')
+        j = header.index('lang')
+
+        for row in rows:
+            yield row[i].value, row[j].value
+
+
+    def import_contacts(self, f):
+        # Detect file type
+        import magic
+
+        with magic.Magic() as m:
+            data = f.read()
+            mimetype = m.from_buffer(data)
+            if mimetype.startswith('text/'):
+                f.seek(0)
+                rows = self._csv_get_rows(f)
+            else:
+                rows = self._xls_get_rows(data)
+
+        for email, lang in rows:
             try:
                 contact = Contact.objects.get(email=email)
             except Contact.DoesNotExist:
