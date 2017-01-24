@@ -7,7 +7,8 @@ from django.conf.urls import patterns, url
 from crma.views import ViewWebMail, UnsubscribeCompleted, UnsubscribeView
 
 
-urlpatterns = patterns('',
+urlpatterns = patterns(
+    '',
     # View Web Email
     url(r'^viewmail/(?P<scheduler_id>[0-9A-Za-z]+)-(?P<scheduler_token>.+)/$',
         ViewWebMail.as_view(), name='crma_view_web_mail'),

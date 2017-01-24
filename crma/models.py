@@ -76,9 +76,9 @@ class MailingList(Model):
     title = CharField(max_length=90)
     members = ManyToManyField(Contact, blank=True)
     all = BooleanField(default=False,
-        help_text=u'If checked, ignore the "members" field. Every contact in '
-                  u'the database will be considered a member of this mailing '
-                  u'list.')
+                       help_text=u'If checked, ignore the "members" field. '
+                                 u'Every contact in the database will be '
+                                 u'considered a member of this mailing list.')
 
     def __unicode__(self):
         return self.title
@@ -89,13 +89,11 @@ class MailingList(Model):
 
         return self.members.all()
 
-
     @staticmethod
     def _csv_get_rows(f):
         reader = csv.DictReader(f, restval='')
         for row in reader:
             yield row['email'], row.get('lang', '')
-
 
     @staticmethod
     def _xls_get_rows(data):
@@ -103,13 +101,12 @@ class MailingList(Model):
 
         wb = open_workbook(file_contents=data)
         rows = wb.sheet_by_index(0).get_rows()
-        header = [ x.value for x in rows.next() ]
+        header = [x.value for x in rows.next()]
         i = header.index('email')
         j = header.index('lang')
 
         for row in rows:
             yield row[i].value, row[j].value
-
 
     def import_contacts(self, f):
         # Detect file type

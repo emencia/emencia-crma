@@ -15,6 +15,8 @@ from crma import models
 
 # Import from Django Model-Translation
 from modeltranslation.admin import TranslationAdmin
+
+
 #
 # EMAILS
 #
@@ -35,7 +37,7 @@ class EmailAdmin(TranslationAdmin):
 
 class EmailSchedulerAdmin(ModelAdmin):
     list_display = ('from_address', 'contact', 'email', 'lang',
-                    'ctime', 'sched_time','sent_time', 'status')
+                    'ctime', 'sched_time', 'sent_time', 'status')
 
     search_fields = ('from_address', 'email__subject', 'contact__email')
     list_filter = ('status', 'lang', 'email')
@@ -43,17 +45,17 @@ class EmailSchedulerAdmin(ModelAdmin):
 
     fieldsets = (
             (_("Emails"), {
-            'fields': (
-                'from_address', 'contact', 'email', 'lang','sched_time'
-            )}),
+                'fields': (
+                    'from_address', 'contact', 'email', 'lang', 'sched_time'
+                )}),
             (_("Status"), {
-            'fields': (
-                ('sent_time', 'status'),
-            )}),
+                'fields': (
+                    ('sent_time', 'status'),
+                )}),
             (_("Context"), {
-            'fields': (
-                ('extra_context', 'trace_error'),
-            )}),
+                'fields': (
+                    ('extra_context', 'trace_error'),
+                )}),
         )
 
 
@@ -64,13 +66,13 @@ class SubscriptionAdmin(ModelAdmin):
 
     fieldsets = (
             (_("Emails"), {
-            'fields': (
-                'channel', 'contact',
-            )}),
+                'fields': (
+                    'channel', 'contact',
+                )}),
             (_("Subscribed info"), {
-            'fields': (
-                ('state', 'unsubscribe_key'),
-            )}),
+                'fields': (
+                    ('state', 'unsubscribe_key'),
+                )}),
         )
     readonly_fields = ('unsubscribe_key', )
 

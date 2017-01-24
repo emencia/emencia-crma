@@ -7,13 +7,12 @@ from modeltranslation.translator import translator, TranslationOptions
 from .models import Channel, Email
 
 
-
 class ChannelTranslationOptions(TranslationOptions):
     fields = ('title',)
 
 
 class EmailTranslationOptions(TranslationOptions):
-    fields = ('body','subject',)
+    fields = ('body', 'subject',)
 
 
 translator.register(Channel, ChannelTranslationOptions)
