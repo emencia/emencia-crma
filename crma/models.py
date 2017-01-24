@@ -201,7 +201,7 @@ class Email(Model):
     @staticmethod
     def get_lang_code(lang):
         default = 'en'
-        if lang is None:
+        if lang is None or lang == '':
             return default
 
         languages = [x[0].lower() for x in settings.LANGUAGES]
