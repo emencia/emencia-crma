@@ -37,11 +37,12 @@ class ViewWebMail(View):
         item = get_object_or_404(EmailScheduler, id=scheduler_id)
 
         # Create the related token to check that url token is valid
-        contact = {}
-        contact['id'] = item.id
-        contact['contact'] = item.contact
-        contact['lang'] = item.lang
-        contact['extra_context'] = {}
+        contact = {
+            'id': item.id,
+            'contact': item.contact,
+            'lang': item.lang,
+            'extra_context': {},
+        }
         token = generate_token(contact)
 
         if token != kwargs['scheduler_token']:

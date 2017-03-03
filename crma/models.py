@@ -61,6 +61,14 @@ class Channel(Model):
     def __unicode__(self):
         return self.title
 
+    def schedule_all(self, contact, extra_context=''):
+        """
+        Schedule all channel emails to the given contact.
+        """
+        mails = Email.objects.filter(channel=self, enabled=True)
+        for mail in mails:
+            schedule_email(mail, contact, extra_context)
+
 
 class Contact(Model):
 
@@ -360,24 +368,13 @@ def subscribe_to_channel(contact, channel, extra_context=''):
         subscription.state = Subscription.SUBSCRIBED
         subscription.save()
 
-    # Now we Schedule the mails to send
-    mails = Email.objects.filter(channel=channel, enabled=True)
-    extra_ctxt = json.dumps(extra_context)
-    for mail in mails:
-        sched_time = datetime.datetime.now() + mail.interval
-        EmailScheduler.objects.create(email=mail,
-                                      lang=contact.lang,
-                                      from_address=channel.from_address,
-                                      contact=contact,
-                                      status=ST_PENDING,
-                                      extra_context=extra_ctxt,
-                                      sched_time=sched_time,
-                                      key=CRMA_KEY
-                                      )
+    return channel
 
 
-def schedule_email(email_id, contact, context, plan_date=None):
-    email = Email.objects.get(email_id=email_id)
+def schedule_email(email, contact, context, plan_date=None):
+    if isinstance(email, basestring):
+        email = Email.objects.get(email_id=email)
+
     subscription = Subscription.get_or_create(contact, email.channel)
     if subscription.state != Subscription.SUBSCRIBED:
         return None
