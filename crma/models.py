@@ -1,12 +1,13 @@
 # -*- coding: utf8 -*-
 
-# Import from Python
+# Standard Library
 import csv
-import random
-import sha
-import json
-import bleach
 import datetime
+from hashlib import sha1
+import json
+import random
+
+import bleach
 
 # Import from Django
 from django.db.models import Model, ForeignKey, ManyToManyField, TextField
@@ -158,8 +159,8 @@ class Subscription(Model):
 
     @classmethod
     def create_unsubscribe_key(cls, to_address):
-        salt = sha.new(str(random.random())).hexdigest()[:5]
-        return sha.new(salt+to_address).hexdigest()
+        salt = sha1(str(random.random())).hexdigest()[:5]
+        return sha1(salt+to_address).hexdigest()
 
     @classmethod
     def get_or_create(cls, contact, channel):
