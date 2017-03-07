@@ -63,6 +63,7 @@ class SubscriptionAdmin(ModelAdmin):
     list_display = ('channel', 'contact', 'state')
     search_fields = ('channel__title', 'contact__email')
     list_filter = ('channel', 'state')
+    raw_id_fields = ('contact',)
 
     fieldsets = (
             (_("Emails"), {
