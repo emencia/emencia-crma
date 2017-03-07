@@ -9,23 +9,21 @@ import random
 
 import bleach
 
-# Import from Django
+# Django
+from django.conf import settings
+from django.contrib.sites.models import Site
+from django.core.mail import EmailMultiAlternatives
+from django.core.urlresolvers import reverse
 from django.db.models import Model, ForeignKey, ManyToManyField, TextField
 from django.db.models import BooleanField, CharField, DateTimeField
-from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
 from django.template import Context, Template
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _, activate
-from django.core.urlresolvers import reverse
-from django.contrib.sites.models import Site
 
-# Import from ...
 from djangocms_text_ckeditor.fields import HTMLField
-
-# Import from Django Timedelta field
 from timedelta.fields import TimedeltaField
 
-# Import from here
+# CRMA
 from .utils import encode_id, generate_token
 
 
@@ -386,7 +384,7 @@ def schedule_email(email, contact, context, plan_date=None):
     ctxt = json.dumps(context)
 
     if plan_date is None:
-        plan_date = datetime.datetime.now() + email.interval
+        plan_date = timezone.now() + email.interval
 
     return EmailScheduler.objects.create(
         email=email,
