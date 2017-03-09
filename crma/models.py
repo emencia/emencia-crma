@@ -2,7 +2,6 @@
 
 # Standard Library
 import csv
-import datetime
 from hashlib import sha1
 import json
 import random
@@ -339,7 +338,7 @@ def schedule_or_update_channel(channel, contact, extra_context=''):
     # Schedule new emails
     mails = Email.objects.filter(channel=channel, enabled=True)
     extra_ctxt = json.dumps(extra_context)
-    now = datetime.datetime.now()
+    now = timezone.now()
     for mail in mails:
         sched_time = now + mail.interval
         EmailScheduler.objects.create(email=mail,
