@@ -327,35 +327,30 @@ def schedule_or_update_channel(channel, contact, extra_context=''):
     if isinstance(channel, basestring):
         channel = Channel.objects.get(channel_id=channel)
 
+    # Remove pending emails
+    EmailScheduler.objects.filter(email__channel=channel, contact=contact,
+                                  status=ST_PENDING).delete()
+
+    # Do not continue if not subscribed (XXX Really? Maybe should subscribe)
     subscription = Subscription.get_or_create(contact, channel)
-    if not subscription.state == Subscription.SUBSCRIBED:
+    if subscription.state != Subscription.SUBSCRIBED:
         return
 
-    # Now we schedule or update the mails to send
+    # Schedule new emails
     mails = Email.objects.filter(channel=channel, enabled=True)
     extra_ctxt = json.dumps(extra_context)
     now = datetime.datetime.now()
     for mail in mails:
-        planned_emails = EmailScheduler.objects.filter(email=mail,
-                                                       status=ST_PENDING,
-                                                       contact=contact)
-        # CREATE
-        if len(planned_emails) == 0:
-            sched_time = now + mail.interval
-            EmailScheduler.objects.create(email=mail,
-                                          lang=contact.lang,
-                                          from_address=channel.from_address,
-                                          contact=contact,
-                                          status=ST_PENDING,
-                                          extra_context=extra_ctxt,
-                                          sched_time=sched_time,
-                                          key=CRMA_KEY
-                                          )
-        else:
-            # UPDATE
-            pe = planned_emails[0]
-            pe.sched_time = now
-            pe.save()
+        sched_time = now + mail.interval
+        EmailScheduler.objects.create(email=mail,
+                                      lang=contact.lang,
+                                      from_address=channel.from_address,
+                                      contact=contact,
+                                      status=ST_PENDING,
+                                      extra_context=extra_ctxt,
+                                      sched_time=sched_time,
+                                      key=CRMA_KEY,
+                                      )
 
 
 def subscribe_to_channel(contact, channel, extra_context=''):
