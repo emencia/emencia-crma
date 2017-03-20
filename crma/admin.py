@@ -44,7 +44,9 @@ class EmailAdmin(TranslationAdmin):
 
     def preview(self, request, *args, **kw):
         email = get_object_or_404(models.Email, id=kw['id'])
-        return HttpResponse(email.body)
+        lang = request.GET.get('lang')
+        body = getattr(email, 'body_%s' % lang) if lang else email.body
+        return HttpResponse(body)
 
 
 class EmailSchedulerAdmin(ModelAdmin):
