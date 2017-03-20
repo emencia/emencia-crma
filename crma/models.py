@@ -34,7 +34,7 @@ STATUS_CHOICES = ((ST_SENT, 'Sent'),
                   (ST_CANCELED, 'Canceled'),
                   (ST_ERROR, 'Error'),)
 
-CRMA_KEY = settings.CRMA_KEY if hasattr(settings, 'CRMA_KEY') else ''
+CRMA_KEY = getattr(settings, 'CRMA_KEY', '')
 
 
 class Channel(Model):
@@ -269,7 +269,7 @@ class Email(Model):
         return False is the mail is not sent else True
         """
         contact = data['contact']
-        to_address = contact.email
+        email_to = [contact.email]
         subscribed = Subscription.get_or_create(contact, self.channel)
 
         # If the user say he doesn't want emails, we don't send the email
@@ -278,11 +278,16 @@ class Email(Model):
 
         data['unsubscribe_key'] = subscribed.unsubscribe_key
 
+        # Debug
+        if data.get('debug'):
+            email_to = settings.CRMA_DEBUG_EMAIL
+            if type(email_to) in (str, unicode):
+                email_to = [email_to]
+
         # We can send the email
         addr = self.channel.from_address
         body_html, subject = self.get_mail_html(data)
         body_text = bleach.clean(body_html)
-        email_to = [to_address]
         email_from = addr
 
         headers = {'X-Tag': self.tag}

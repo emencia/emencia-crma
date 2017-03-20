@@ -24,7 +24,7 @@ from crma.signals import email_sent
 # EMAIL SCAN FREQUENCY
 SCAN_EVERY = 30
 
-CRMA_KEY = settings.CRMA_KEY if hasattr(settings, 'CRMA_KEY') else ''
+CRMA_KEY = getattr(settings, 'CRMA_KEY', '')
 
 
 # PostgreSQL or SQLite
@@ -78,9 +78,10 @@ class Command(BaseCommand):
                     mail.save()
                     continue
 
+                if debug_mode:
+                    data['debug'] = True
+
                 try:
-                    if debug_mode:
-                        data['contact'].email = settings.CRMA_DEBUG_EMAIL
                     mail.email.send(data)
                 except SMTPRecipientsRefused, e:
                     print 'Error: ', mail.pk
