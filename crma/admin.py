@@ -5,9 +5,12 @@ from os.path import join
 
 # Import from Django
 from django.conf import settings
+from django.conf.urls import patterns, url
 from django.contrib.admin import ModelAdmin
 from django.contrib import admin
 from django import forms
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
 
 # Import from here
@@ -33,6 +36,15 @@ class EmailAdmin(TranslationAdmin):
         css = {
             'screen': ('modeltranslation/css/tabbed_translation_fields.css',),
         }
+
+    def get_urls(self):
+        urls = super(EmailAdmin, self).get_urls()
+        preview = self.admin_site.admin_view(self.preview)
+        return patterns('', url(r'^(?P<id>\d+)/preview/$', preview)) + urls
+
+    def preview(self, request, *args, **kw):
+        email = get_object_or_404(models.Email, id=kw['id'])
+        return HttpResponse(email.body)
 
 
 class EmailSchedulerAdmin(ModelAdmin):

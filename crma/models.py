@@ -19,7 +19,6 @@ from django.template import Context, Template
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _, activate
 
-from djangocms_text_ckeditor.fields import HTMLField
 from timedelta.fields import TimedeltaField
 
 # CRMA
@@ -181,7 +180,7 @@ class Subscription(Model):
 class Email(Model):
 
     subject = CharField(_('Subject'), max_length=200)
-    body = HTMLField(blank=True)
+    body = TextField(blank=True)
     interval = TimedeltaField()
     enabled = BooleanField()
     channel = ForeignKey(Channel)
