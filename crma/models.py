@@ -15,6 +15,8 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.db.models import Model, ForeignKey, ManyToManyField, TextField
 from django.db.models import BooleanField, CharField, DateTimeField
+from django.http import Http404
+from django.shortcuts import render
 from django.template import Context, Template
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _, activate
@@ -320,6 +322,31 @@ class EmailScheduler(Model):
     # this key. It is a security check to prevent send emails to users
     # when we import databases from / to production for example.
     key = CharField(max_length=80, blank=True)
+
+
+    def render(self, request, token=None, template='crma/mail_viewer.html'):
+        contact = {
+            'id': self.id,
+            'contact': self.contact,
+            'lang': self.lang,
+            'extra_context': {},
+        }
+
+        # Check the token if given
+        if token:
+            if generate_token(contact) != token:
+                raise Http404
+
+        contact['extra_context'] = json.loads(self.extra_context)
+
+        # Read the related unsubscribe token
+        channel = self.email.channel
+        subscribed = Subscription.get_or_create(self.contact, channel)
+        contact['unsubscribe_key'] = subscribed.unsubscribe_key
+
+        # Create the email body and show it
+        body, subject = self.email.get_mail_html(contact)
+        return render(request, template, {'body': body, 'subject': subject})
 
 
 def schedule_or_update_channel(channel, contact, extra_context=''):

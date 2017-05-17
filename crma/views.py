@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 
-# Import from Django
+# Django
 from django.views.generic import View, TemplateView
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
-from django.shortcuts import get_object_or_404, render
-from django.http import Http404
+from django.shortcuts import get_object_or_404
 
-# Import from here
+# CRMA
 from .models import Subscription, EmailScheduler
 from .models import cancel_subscription
-from .utils import decode_id, generate_token
+from .utils import decode_id
 
 
 class UnsubscribeCompleted(TemplateView):
@@ -34,26 +33,7 @@ class ViewWebMail(View):
     def get(self, request, *args, **kwargs):
         # Read the schedule item
         scheduler_id = decode_id(kwargs['scheduler_id'])
+        token = kwargs['scheduler_token']
+
         item = get_object_or_404(EmailScheduler, id=scheduler_id)
-
-        # Create the related token to check that url token is valid
-        contact = {
-            'id': item.id,
-            'contact': item.contact,
-            'lang': item.lang,
-            'extra_context': {},
-        }
-        token = generate_token(contact)
-
-        if token != kwargs['scheduler_token']:
-            raise Http404
-
-        # Read the related unsubscribe token
-        channel = item.email.channel
-        subscribed = Subscription.get_or_create(item.contact, channel)
-        contact['unsubscribe_key'] = subscribed.unsubscribe_key
-
-        # Create the email body and show it
-        body, subject = item.email.get_mail_html(contact)
-        return render(request, self.template_name, {'body': body,
-                                                    'subject': subject, })
+        return item.render(request, token=token, template=self.template_name)

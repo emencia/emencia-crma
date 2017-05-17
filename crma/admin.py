@@ -73,6 +73,15 @@ class EmailSchedulerAdmin(ModelAdmin):
                 )}),
         )
 
+    def get_urls(self):
+        urls = super(EmailSchedulerAdmin, self).get_urls()
+        preview = self.admin_site.admin_view(self.preview)
+        return patterns('', url(r'^(?P<id>\d+)/preview/$', preview)) + urls
+
+    def preview(self, request, *args, **kw):
+        email = get_object_or_404(models.EmailScheduler, id=kw['id'])
+        return email.render(request)
+
 
 class SubscriptionAdmin(ModelAdmin):
     list_display = ('channel', 'contact', 'state')
